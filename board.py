@@ -56,34 +56,36 @@ class Board(object):
 
         p_mv = random.random()
 
+        print(direction, distance)
+
         if direction == "up":
             if p_mv < self.p_move[1][1]:
-                d_y = distance
+                d_y = -distance
             elif p_mv - self.p_move[1][1] < self.p_move[0][1]:
-                d_y = distance+1
+                d_y = -distance+1
             else:
-                d_y = distance-1
-        elif distance == "down":
+                d_y = -distance-1
+        elif direction == "down":
             if p_mv < self.p_move[1][1]:
                 d_y = distance
             elif p_mv - self.p_move[1][1] < self.p_move[0][1]:
                 d_y = distance-1
             else:
                 d_y = distance+1
-        elif distance == "right":
+        elif direction == "right":
             if p_mv < self.p_move[1][1]:
                 d_x = distance
             elif p_mv - self.p_move[1][1] < self.p_move[1][0]:
                 d_x = distance - 1
             else:
                 d_x = distance + 1
-        elif distance == "left":
+        elif direction == "left":
             if p_mv < self.p_move[1][1]:
-                d_x = distance
+                d_x = -distance
             elif p_mv - self.p_move[1][1] < self.p_move[1][0]:
-                d_x = distance + 1
+                d_x = -distance + 1
             else:
-                d_x = distance - 1
+                d_x = -distance - 1
 
         self.robot.move(d_x*self.w, d_y*self.h, d_x, d_y)
 
@@ -173,6 +175,12 @@ class Robot(object):
         if self.y > self.height:
             self.y -= self.height
             self.y_i -= self.size
+        if self.x < 0:
+            self.x += self.height
+            self.x_i += self.size
+        if self.y < 0:
+            self.y += self.height
+            self.y_i += self.size
 
 
 

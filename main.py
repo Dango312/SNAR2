@@ -2,6 +2,8 @@
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import random
+
 import pygame
 from board import Board
 
@@ -11,6 +13,7 @@ def main():
     pygame.font.init()
     screen = pygame.display.set_mode((1080, 620))
     board = Board(10, screen, 1080, 620)
+    direction = ["up", "down", "right", "left"]
     while(True):
         board.draw()
         for event in pygame.event.get():
@@ -19,7 +22,7 @@ def main():
             if event.type == pygame.KEYDOWN:
                 screen.fill((0, 0, 0))
                 if event.key == pygame.K_m:
-                    board.move("up", 2)
+                    board.move(direction[random.randint(0, 3)], random.randint(1, 3))
                 if event.key == pygame.K_s:
                     board.sense()
                 if event.key == pygame.K_g:
