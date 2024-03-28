@@ -5,6 +5,13 @@ import numpy as np
 
 class Board(object):
     def __init__(self, size, screen, width, height):
+        """
+        Поле, по которому перемещается робот. Вычисление матрицы вероятностей
+        :param size: размер карты
+        :param screen: объект screen из pygame
+        :param width: ширина окна
+        :param height: высота окна
+        """
         self.board = []
         self.probs = np.zeros((size, size))
         self.map = []
@@ -19,11 +26,14 @@ class Board(object):
 
         self.w = height // size
         self.h = height // size
+        # случайное определение начальной точки
         x_r = math.floor(random.random()*size)
         y_r = math.floor(random.random()*size)
         self.probs[y_r, x_r] = 1.0
+
         self.robot = Robot(x_r*self.w + self.w // 2, y_r*self.h + self.h//2, x_r, y_r, math.floor(self.w*0.3), height, size, screen)
         self.logger = Logger(screen, height+80, 40)
+        # случайное распределеение цветов
         for i in range(size):
             row = []
             map_row = []
@@ -38,6 +48,7 @@ class Board(object):
                     map_row.append("green")
             self.board.append(row)
             self.map.append(map_row)
+        print(self.map)
 
         self.logger.draw()
 
@@ -49,6 +60,12 @@ class Board(object):
         self.robot.draw()
 
     def move(self, direction, distance):
+        """
+        Обновляет матрицу вероятностей с учётом пройденного расстояния
+        :param direction: направление
+        :param distance: расстояние
+        :return:
+        """
         new_probabilities = np.zeros((self.size, self.size))
 
         d_x = 0
@@ -57,7 +74,7 @@ class Board(object):
         p_mv = random.random()
 
         print(direction, distance)
-
+        # робот может с некоторой вероятностью проехать на 1 клетку меньше, либо на 1 клетку дальше
         if direction == "up":
             if p_mv < self.p_move[1][1]:
                 d_y = -distance
@@ -87,49 +104,52 @@ class Board(object):
             else:
                 d_x = -distance - 1
 
-        self.robot.move(d_x*self.w, d_y*self.h, d_x, d_y)
-
+        self.robot.move(d_x*self.w, d_y*self.h, d_x, d_y) # перемещение робота
+        # вычисление матрицы вероятностей
         for x in range(self.size):
             for y in range(self.size):
-                # new_x = x + dx * distance
-                # new_y = y + dy * distance
-
                 if direction == 'up':
-                    new_probabilities[y, x] += self.probs[(y - distance) % self.size, x] * self.p_move[1][1]
-                    new_probabilities[y, x] += self.probs[(y - distance + 1) % self.size, x] * self.p_move[0][1]
-                    new_probabilities[y, x] += self.probs[(y - distance - 1) % self.size, x] * self.p_move[2][1]
-                elif direction == 'down':
                     new_probabilities[y, x] += self.probs[(y + distance) % self.size, x] * self.p_move[1][1]
-                    new_probabilities[y, x] += self.probs[(y + distance + 1) % self.size, x] * self.p_move[2][1]
-                    new_probabilities[y, x] += self.probs[(y + distance - 1) % self.size, x] * self.p_move[0][1]
+                    new_probabilities[y, x] += self.probs[(y + distance + 1) % self.size, x] * self.p_move[0][1]
+                    new_probabilities[y, x] += self.probs[(y + distance - 1) % self.size, x] * self.p_move[2][1]
+                elif direction == 'down':
+                    new_probabilities[y, x] += self.probs[(y - distance) % self.size, x] * self.p_move[1][1]
+                    new_probabilities[y, x] += self.probs[(y - distance + 1) % self.size, x] * self.p_move[2][1]
+                    new_probabilities[y, x] += self.probs[(y - distance - 1) % self.size, x] * self.p_move[0][1]
                 elif direction == 'left':
-                    new_probabilities[y, x] += self.probs[y, (x - distance) % self.size] * self.p_move[1][1]
-                    new_probabilities[y, x] += self.probs[y, (x - distance + 1) % self.size] * self.p_move[1][0]
-                    new_probabilities[y, x] += self.probs[y, (x - distance - 1) % self.size] * self.p_move[1][2]
-                elif direction == 'right':
                     new_probabilities[y, x] += self.probs[y, (x + distance) % self.size] * self.p_move[1][1]
-                    new_probabilities[y, x] += self.probs[y, (x + distance + 1) % self.size] * self.p_move[1][2]
-                    new_probabilities[y, x] += self.probs[y, (x + distance - 1) % self.size] * self.p_move[1][0]
+                    new_probabilities[y, x] += self.probs[y, (x + distance + 1) % self.size] * self.p_move[1][0]
+                    new_probabilities[y, x] += self.probs[y, (x + distance - 1) % self.size] * self.p_move[1][2]
+                elif direction == 'right':
+                    new_probabilities[y, x] += self.probs[y, (x - distance) % self.size] * self.p_move[1][1]
+                    new_probabilities[y, x] += self.probs[y, (x - distance + 1) % self.size] * self.p_move[1][2]
+                    new_probabilities[y, x] += self.probs[y, (x - distance - 1) % self.size] * self.p_move[1][0]
 
         self.probs = new_probabilities / np.sum(new_probabilities)
         self.logger.draw_probs(self.probs)
 
     def sense(self):
+        """
+        Обновляет матрицу вероятностей с учётом задетектированного цвета
+        :return:
+        """
         x = self.robot.x_i
         y = self.robot.y_i
         print("X, Y", x, y)
         color = self.map[y][x]
-        real_sensor_error = 1
+        real_sensor_error = 1  # вероятность того, что сенсор правильно задетектит цвет
         correct_detection = 0.6
         incorrect_detection = 0.2
         print("ЦВЕТА: ", color)
-        flag = random.random() < real_sensor_error
+        flag = random.random() < real_sensor_error  # верно ли сенсор определил цвет
         print('Flag = ', flag)
         if not flag:
             color = 'red' if color == 'green' else 'green'
+        print("ЦВЕТА после флага: ", color)
+        # обновление матрицы вероятностей после работы датчика
         for i in range(self.size):
             for j in range(self.size):
-                print('Is equal: ', i, j, self.map[i][j] == color)
+                #print('Is equal: ', i, j, self.map[i][j] == color)
                 if self.map[i][j] == color:
                     self.probs[i, j] *= correct_detection
                 else:
@@ -139,6 +159,10 @@ class Board(object):
         print("After sense:\n", self.probs)
 
     def get_position(self):
+        """
+        Возвращает наиболее вероятную координату робота
+        :return: координаты робота
+        """
         return np.unravel_index(np.argmax(self.probs), self.probs.shape)
 
 
@@ -165,6 +189,14 @@ class Robot(object):
         self.size = size
 
     def move(self, d_x, d_y, d_x_i, d_y_i):
+        """
+        Перемещение робота
+        :param d_x: x координата для отрисовки
+        :param d_y: y кордината для отрисовки
+        :param d_x_i: x координата на матрице
+        :param d_y_i: y кордината на матрице
+        :return:
+        """
         self.x += d_x
         self.y += d_y
         self.x_i += d_x_i
@@ -182,8 +214,6 @@ class Robot(object):
             self.y += self.height
             self.y_i += self.size
 
-
-
     def draw(self):
         pygame.draw.circle(self.screen, (0, 0, 255), (self.x, self.y), self.w)
 
@@ -196,7 +226,11 @@ class Logger(object):
         self.pos = (x,y)
 
     def draw_probs(self, probs):
-
+        """
+        Отрисовка матрицы вероятностей
+        :param probs: матрица вероятностей
+        :return:
+        """
         for i in range(len(probs)):
             text = ""
             for j in range(len(probs)):
