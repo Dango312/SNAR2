@@ -1,6 +1,7 @@
 import random
 import pygame
-from SNAR2.board import Board
+from board import Board
+import moviepy.editor
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -11,6 +12,8 @@ def main():
     pygame.init()
     pygame.font.init()
     screen = pygame.display.set_mode((1080, 620))
+
+
 
     #Отрисовка кнопок меню
     font = pygame.font.SysFont("Comic Sans MS", 20)
@@ -34,6 +37,7 @@ def main():
     map_size = 10
     active = False
     text = ''
+    count_K = 0
     while(True):
         if menu_flag:
             screen.fill(BLACK)
@@ -52,6 +56,9 @@ def main():
             input_box.w = width
             screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
             pygame.draw.rect(screen, WHITE, input_box, 2)
+        elif map_size == 6 or showVideo:
+
+            showVideo = False
         else:
             board.draw()
         for event in pygame.event.get():
@@ -82,6 +89,11 @@ def main():
                     board.sense()
                 if event.key == pygame.K_g:  # при нажатии g выводится наиболее вероятная координата робота
                     print(board.get_position())
+                if event.key == pygame.K_r:
+                    count_K+=1
+                    if count_K == 6:
+                        video = moviepy.editor.VideoFileClip("Creepy Grudge Ghost Girl in the Mirror-.mp4")
+                        video.preview()
                 if active:
                     if event.key == pygame.K_RETURN:
                         print(text)
