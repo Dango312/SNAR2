@@ -4,16 +4,16 @@ import math
 import numpy as np
 
 class Board(object):
-    def __init__(self, size, screen, width, height):
+    def __init__(self, size, screen, width, height, distribution='uniform'):
         """
         Поле, по которому перемещается робот. Вычисление матрицы вероятностей
         :param size: размер карты
         :param screen: объект screen из pygame
         :param width: ширина окна
         :param height: высота окна
+        :param distribution: тип начально распределения вероятностей ('uniform', 'definite')
         """
         self.board = []
-        self.probs = np.zeros((size, size))
         self.map = []
         self.red = (255, 0, 0)
         self.green = (0, 255, 0)
@@ -29,11 +29,16 @@ class Board(object):
         # случайное определение начальной точки
         x_r = math.floor(random.random()*size)
         y_r = math.floor(random.random()*size)
-        self.probs[y_r, x_r] = 1.0
+
+        if distribution == 'uniform':
+            self.probs = np.ones((size, size)) / (size * size) # задание равной вероятности
+        else:
+            self.probs = np.zeros((size, size))  # для задания определённой вероятности
+            self.probs[y_r, x_r] = 1.0  # для задания определённой вероятности
 
         self.robot = Robot(x_r*self.w + self.w // 2, y_r*self.h + self.h//2, x_r, y_r, math.floor(self.w*0.3), height, size, screen)
         self.logger = Logger(screen, height+80, 40)
-        # случайное распределеение цветов
+        # случайное распределение цветов
         for i in range(size):
             row = []
             map_row = []
@@ -223,7 +228,7 @@ class Logger(object):
         self.screen = screen
         self.font = pygame.font.SysFont("Comic Sans MS", 15)
         self.text_surface = self.font.render("Probabilities", False, (255, 255, 255))
-        self.pos = (x,y)
+        self.pos = (x, y)
 
     def draw_probs(self, probs):
         """
@@ -234,7 +239,7 @@ class Logger(object):
         for i in range(len(probs)):
             text = ""
             for j in range(len(probs)):
-                text += str(round(probs[i, j], 2)) + " "
+                text += str(round(probs[i, j], 2)) + "  "
             text_sur = self.font.render(text, False, (255, 255, 255))
             self.screen.blit(text_sur, (self.pos[0], self.pos[1]+(i+1)*18))
 
